@@ -62,6 +62,20 @@ class Home extends StatelessWidget {
           ),
 
           //floating objects
+          //loading images
+          IgnorePointer(
+            ignoring: true,
+            child: Opacity(
+              opacity: 0,
+              child: Row(
+                children: [
+                  Image.asset('assets/trash.png'),
+                  Image.asset('assets/add.png'),
+                  Image.asset('assets/edit.png'),
+                ],
+              ),
+            ),
+          ),
           animationPlayer(),
           IgnorePointer(
             ignoring: context.watch<glob>().animated_filter['ignored'],
@@ -95,14 +109,17 @@ class Home extends StatelessWidget {
               ),
             ),
           ),
-           //settings page
+          //settings page
           Center(
             child: Transform.scale(
-              scale: context.watch<glob>().animated_settings_page['scale']['value'],
+              scale: context.watch<glob>().animated_settings_page['scale']
+                  ['value'],
               child: IgnorePointer(
                 ignoring: !context.watch<glob>().settings_page_open,
                 child: Opacity(
-                  opacity: context.watch<glob>().animated_settings_page['opacity']['value'],
+                  opacity: context
+                      .watch<glob>()
+                      .animated_settings_page['opacity']['value'],
                   child: Container(
                     width: MediaQuery.of(context).size.width,
                     height: MediaQuery.of(context).size.height,
@@ -148,8 +165,6 @@ class Home extends StatelessWidget {
               ),
             ),
           ),
-
-         
 
           notifyBox(
             text: context.watch<glob>().notify_text,
