@@ -158,7 +158,8 @@ class settings_page extends StatelessWidget {
                   decoration: BoxDecoration(
                       color: Color.fromRGBO(135, 97, 198, 1),
                       borderRadius: BorderRadius.circular(10 * ratio)),
-                  child: Center(
+                  child: Align(
+                    alignment: Alignment.center,
                     child: Text(
                       context.watch<glob>().app_language == 'arabic'
                           ? 'Switch to English'
@@ -166,7 +167,7 @@ class settings_page extends StatelessWidget {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 24.05 * ratio,
-                        fontFamily: context.watch<glob>().app_language,
+                        fontFamily: context.watch<glob>().app_language == 'arabic' ? 'english' : 'arabic',
                       ),
                     ),
                   ),

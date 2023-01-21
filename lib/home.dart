@@ -157,7 +157,7 @@ class Home extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 50 * ratio,
                               color: Colors.white,
-                              fontFamily: context.watch<glob>().app_language),
+                              fontFamily: context.watch<glob>().app_language == 'arabic' ? 'english' : 'arabic'),
                         ),
                       ),
                     ),
