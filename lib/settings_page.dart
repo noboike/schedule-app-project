@@ -164,9 +164,10 @@ class settings_page extends StatelessWidget {
                           ? 'Switch to English'
                           : 'التبديل إلى العربية',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24.05 * ratio,
-                          fontFamily: context.watch<glob>().app_language),
+                        color: Colors.white,
+                        fontSize: 24.05 * ratio,
+                        fontFamily: context.watch<glob>().app_language,
+                      ),
                     ),
                   ),
                 ),

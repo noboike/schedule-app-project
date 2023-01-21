@@ -169,7 +169,7 @@ class add_page extends StatelessWidget {
                   style: TextStyle(
                       color: pTextColor1,
                       fontSize: 25.77 * ratio,
-                      fontFamily: 'english'),
+                      fontFamily: context.watch<glob>().app_language),
                   textDirection: context.watch<glob>().app_language == 'arabic'
                       ? TextDirection.rtl
                       : TextDirection.ltr,
