@@ -72,6 +72,7 @@ class Home extends StatelessWidget {
                   Image.asset('assets/trash.png'),
                   Image.asset('assets/add.png'),
                   Image.asset('assets/edit.png'),
+                  Image.asset('assets/cancel.png'),
                 ],
               ),
             ),
