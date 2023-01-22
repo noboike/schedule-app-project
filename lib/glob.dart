@@ -286,10 +286,12 @@ class glob with ChangeNotifier {
     String? _storage = storage.getString('lectures');
     String? _storage2 = storage.getString('settings');
     String? _storage3 = storage.getString('app_language');
-    if (_storage != null && _storage2 != null && _storage3 != null) {
+    bool? _storage4 = storage.getBool('darkMode');
+    if (_storage != null && _storage2 != null && _storage3 != null && _storage4 != null) {
       lectures = json.decode(_storage);
       settings = json.decode(_storage2);
       app_language = _storage3;
+      darkMode = _storage4;
       // settings = json.decode(_data[0]['settings'][0]);
     }
   }
@@ -298,6 +300,7 @@ class glob with ChangeNotifier {
     storage.setString('lectures', json.encode(lectures));
     storage.setString('settings', json.encode(settings));
     storage.setString('app_language', app_language);
+    storage.setBool('darkMode', darkMode);
   }
 
   int selectedLec = 0;
@@ -651,7 +654,12 @@ class glob with ChangeNotifier {
   }
 
   void toggoleDarkMode() {
-    animated_filter['ignored'] = false;
+    animated_filter['ignored'] = false;if (!darkMode) {
+            nextThemeColor = Color.fromRGBO(21, 21, 25, 1);
+          } else {
+            nextThemeColor = Colors.white;
+          }
+
     if (darkMode) {
       themeModeImageSrc = 'assets/sun.png';
     } else {
@@ -671,6 +679,7 @@ class glob with ChangeNotifier {
         'easing': 'easeInOutExpo',
         'end': () {
           darkMode = !darkMode;
+          save();
         }
       },
       {
