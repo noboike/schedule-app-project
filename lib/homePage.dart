@@ -15,7 +15,7 @@ class homePage extends StatelessWidget {
           visible: !context.watch<glob>().nolec_hidden,
           child: Container(
             width: MediaQuery.of(context).size.width - (80 * ratio),
-            margin: EdgeInsets.only(top: 49 * ratio, bottom: 20 * ratio),
+            margin: EdgeInsets.only(top: 100 * ratio, bottom: 20 * ratio),
             child: Text(
               context.watch<glob>().app_language == 'arabic'
                   ? 'لا توجد محاضرات اليوم!'
