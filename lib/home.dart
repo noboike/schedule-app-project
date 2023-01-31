@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:schedule_app_project/add_page.dart';
+import 'package:schedule_app_project/fetch_widget.dart';
+import 'package:schedule_app_project/loginPage.dart';
+import 'package:schedule_app_project/signupPage.dart';
 import 'package:schedule_app_project/settings_page.dart';
 import 'uiAnimation.dart';
 import 'glob.dart';
@@ -166,7 +169,10 @@ class Home extends StatelessWidget {
               ),
             ),
           ),
-
+          //fetching screen
+          loginPage(),
+          signupPage(),
+          fetch_widget(),
           notifyBox(
             text: context.watch<glob>().notify_text,
             type: context.watch<glob>().notify_type,

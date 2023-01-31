@@ -24,6 +24,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // context.read<glob>().notify('مرحبا بك', 'alert');
     context.read<glob>().animate_live_ball();
+    context.read<glob>().animate_fetch();
     context.read<glob>().load();
   }
 

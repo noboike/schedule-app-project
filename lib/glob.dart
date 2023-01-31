@@ -6,9 +6,14 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 TextEditingController lec_name = TextEditingController(text: '');
 TextEditingController code_controller = TextEditingController(text: '');
+TextEditingController username_inp = TextEditingController(text: '');
+TextEditingController password_inp = TextEditingController(text: '');
+TextEditingController rpassword_inp = TextEditingController(text: '');
 
 double ratio = 1.0;
 Color? pageColor;
@@ -26,6 +31,8 @@ class MyBehavior extends ScrollBehavior {
 }
 
 class glob with ChangeNotifier {
+  String username = '';
+  String password = '';
   late SharedPreferences storage;
   dynamic box = {
     "x": 0.0,
@@ -35,6 +42,12 @@ class glob with ChangeNotifier {
     "anm": {'value': -50.0},
     "anm2": {'value': 50.0},
     "anm-opacity": {'value': 0.0},
+  };
+  dynamic animated_fetch = {
+    'opacity1': {'value': 1.0},
+    'opacity2': {'value': 0.5},
+    'opacity3': {'value': 0.5},
+    'anm': [],
   };
   dynamic animated_checkbox = [
     {
@@ -50,6 +63,20 @@ class glob with ChangeNotifier {
       'size': {'value': 24.0},
       'anm': [],
       'for': 'transtale Code',
+    },
+    {
+      'opacity': {'value': 0.0},
+      'x': {'value': 39.0},
+      'size': {'value': 24.0},
+      'anm': [],
+      'for': 'cloud-storage',
+    },
+    {
+      'opacity': {'value': 0.0},
+      'x': {'value': 39.0},
+      'size': {'value': 24.0},
+      'anm': [],
+      'for': 'sounds',
     }
   ];
   dynamic animated_filter = {
@@ -146,6 +173,58 @@ class glob with ChangeNotifier {
         },
       }
     ];
+    if (type == 'error' && settings['sounds']) {
+      final player = AudioPlayer();
+      player.play(AssetSource('mixkit-click-error-1110.wav'));
+    }
+    else if (type == 'success' && settings['sounds']) {
+      final player = AudioPlayer();
+      player.play(AssetSource('button-pressed-38129.mp3'));
+    }
+  }
+
+  void animate_fetch() {
+    animated_fetch['anm'] = [
+      //1
+      {
+        'target': animated_fetch['opacity1'],
+        'value': [1.0, 0.5],
+        'duration': 150,
+      },
+      {
+        'target': animated_fetch['opacity2'],
+        'value': [0.5, 1.0],
+        'duration': 150,
+        'nisted': true,
+      },
+      //2
+      {
+        'target': animated_fetch['opacity2'],
+        'value': [1.0, 0.5],
+        'duration': 150,
+      },
+      {
+        'target': animated_fetch['opacity3'],
+        'value': [0.5, 1.0],
+        'duration': 150,
+        'nisted': true,
+      },
+      //3
+      {
+        'target': animated_fetch['opacity3'],
+        'value': [1.0, 0.5],
+        'duration': 150,
+      },
+      {
+        'target': animated_fetch['opacity1'],
+        'value': [0.5, 1.0],
+        'duration': 150,
+        'nisted': true,
+        'end': () {
+          animate_fetch();
+        },
+      },
+    ];
   }
 
   void animate_live_ball() {
@@ -170,6 +249,7 @@ class glob with ChangeNotifier {
   bool nextLec_hidden = true;
   bool doneLec_hidden = true;
   bool nolec_hidden = false;
+  bool is_fetching = false;
 
   bool day7_hidden = false;
   bool day1_hidden = false;
@@ -182,6 +262,8 @@ class glob with ChangeNotifier {
   dynamic settings = {
     '24 Hours mode': false,
     'transtale Code': true,
+    'cloud-storage': false,
+    'sounds': true,
   };
 
   void renderCheckbox() {
@@ -243,13 +325,20 @@ class glob with ChangeNotifier {
       ];
     }
     settings[id] = !settings[id];
+    if (id == 'cloud-storage') {
+      should_load = settings['cloud-storage'];
+    }
     save();
   }
 
   String add_mode = 'add';
+  String schedule_mode = 'api';
   bool settings_page_open = false;
+  bool login_page_open = false;
+  bool signup_page_open = false;
   bool editVisible = false;
   bool canUpdate = true;
+  bool should_load = false;
   bool darkMode = true;
   bool app_pointer = false;
   String app_language = 'arabic';
@@ -282,25 +371,194 @@ class glob with ChangeNotifier {
   List day6_widgets = [];
   dynamic lectures = [];
   void load() async {
+    should_load = false;
     storage = await SharedPreferences.getInstance();
-    String? _storage = storage.getString('lectures');
     String? _storage2 = storage.getString('settings');
     String? _storage3 = storage.getString('app_language');
     bool? _storage4 = storage.getBool('darkMode');
-    if (_storage != null && _storage2 != null && _storage3 != null && _storage4 != null) {
-      lectures = json.decode(_storage);
-      settings = json.decode(_storage2);
-      app_language = _storage3;
-      darkMode = _storage4;
-      // settings = json.decode(_data[0]['settings'][0]);
+    bool? _storage5 = storage.getBool('cloud-storage');
+    String? _storage6 = storage.getString('username');
+    String? _storage7 = storage.getString('password');
+    if (true) {
+      settings['24 Hours mode'] = json.decode(_storage2!)['24 Hours mode'];
+      settings['transtale Code'] = json.decode(_storage2)['transtale Code'];
+      settings['cloud-storage'] = json.decode(_storage2)['cloud-storage'];
+      settings['sounds'] = json.decode(_storage2)['sounds'];
+      username = _storage6!;
+      password = _storage7!;
+      print('hello world');
+      // print(settings['cloud-storage']);
+      app_language = _storage3!;
+      darkMode = _storage4!;
+    }
+
+    if (username.trim().length == 0 || username.trim().length == 0) {
+      settings['cloud-storage'] = false;
+    }
+    if (settings['cloud-storage']) {
+      is_fetching = true;
+      try {
+        var response = await Dio().get(
+            'https://noboike.com/apis/schedule/get/index.php?username=${username}&password=${password}');
+        dynamic fdata = response.data;
+        if (fdata['status'] == 'true') {
+          lectures = fdata['lectures'];
+          settings['cloud-storage'] = true;
+          save();
+          loadSchedule();
+          closeLogin();
+        } else {
+          notify(
+              app_language == 'arabic' ? 'فشل تسجيل الدخول' : 'login failed!',
+              'error');
+          username = '';
+          password = '';
+          settings['cloud-storage'] = false;
+        }
+      } catch (e) {
+        notify(
+            app_language == 'arabic'
+                ? 'فشل الإتصال بالخادم'
+                : 'fetching failed',
+            'error');
+
+        print(e);
+        storage = await SharedPreferences.getInstance();
+        storage = await SharedPreferences.getInstance();
+        String? _storage = storage.getString('lectures');
+        if (_storage != null) {
+          lectures = json.decode(_storage);
+          // settings = json.decode(_data[0]['settings'][0]);
+        }
+      }
+      is_fetching = false;
+    } else {
+      is_fetching = false;
+      storage = await SharedPreferences.getInstance();
+      String? _storage = storage.getString('lectures');
+      if (_storage != null) {
+        lectures = json.decode(_storage);
+        // settings = json.decode(_data[0]['settings'][0]);
+      }
     }
   }
 
   void save() async {
+    storage = await SharedPreferences.getInstance();
     storage.setString('lectures', json.encode(lectures));
     storage.setString('settings', json.encode(settings));
     storage.setString('app_language', app_language);
     storage.setBool('darkMode', darkMode);
+    storage.setString('username', username);
+    storage.setString('password', password);
+  }
+
+  void login() async {
+    is_fetching = true;
+    try {
+      var response = await Dio().get(
+          'https://noboike.com/apis/schedule/get/index.php?username=${username_inp.text}&password=${password_inp.text}');
+      dynamic fdata = response.data;
+      if (fdata['status'] == 'true') {
+        lectures = fdata['lectures'];
+        if (settings['cloud-storage'] == false) {
+          toggoleSettings('cloud-storage', 2);
+        }
+        ;
+        username = username_inp.text;
+        password = password_inp.text;
+        save();
+        loadSchedule();
+        closeLogin();
+        notify(app_language == 'arabic' ? 'تم تسجيل الدخول' : 'login success!',
+            'success');
+      } else {
+        notify(app_language == 'arabic' ? 'فشل تسجيل الدخول' : 'login failed!',
+            'error');
+        username = '';
+        password = '';
+        settings['cloud-storage'] = false;
+      }
+    } catch (e) {
+      notify(
+          app_language == 'arabic' ? 'فشل الإتصال بالخادم' : 'fetching failed',
+          'error');
+
+      print(e);
+    }
+    is_fetching = false;
+  }
+
+  void signup() async {
+    if (password_inp.text != rpassword_inp.text) {
+      notify(
+          app_language == 'arabic'
+              ? 'كلمة المرور غير متطابقة'
+              : 'password not matched!',
+          'error');
+    } else {
+      is_fetching = true;
+      try {
+        var response = await Dio().get(
+            'https://noboike.com/apis/signup/?username=${username_inp.text}&password=${password_inp.text}');
+        dynamic fdata = response.data;
+        print(fdata['status']);
+        if (fdata['status'] == 'true') {
+          closeSignup();
+          goToLogin();
+          notify(app_language == 'arabic' ? 'تم إنشاء حساب' : 'signup success!',
+              'success');
+        } else {
+          print(fdata['db-msg']);
+          if (fdata['db-msg'] == 'username is taken!') {
+            notify(
+                app_language == 'arabic'
+                    ? 'اسم المستخدم ماخوذ'
+                    : 'username is taken!',
+                'error');
+          } else if (fdata['db-msg'] ==
+              'password should be 8 chars at least!') {
+            notify(
+                app_language == 'arabic'
+                    ? 'كلمة المرور غير صالحه'
+                    : 'ivalid password!',
+                'error');
+          } else {
+            notify(
+                app_language == 'arabic'
+                    ? 'فشل إنشاء الحساب'
+                    : 'signup failed!',
+                'error');
+          }
+          username = '';
+          password = '';
+          settings['cloud-storage'] = false;
+        }
+      } catch (e) {
+        notify(
+            app_language == 'arabic'
+                ? 'فشل الإتصال بالخادم'
+                : 'fetching failed',
+            'error');
+
+        // print(e);
+      }
+      is_fetching = false;
+    }
+  }
+
+  void logout() {
+    if (settings['cloud-storage'] == true) {
+      toggoleSettings('cloud-storage', 2);
+    }
+    ;
+    password = '';
+    username = '';
+    if (settings['sounds']) {
+      final player = AudioPlayer();
+      player.play(AssetSource('click1.mp3'));
+    }
+    save();
   }
 
   int selectedLec = 0;
@@ -331,7 +589,7 @@ class glob with ChangeNotifier {
     return rslt;
   }
 
-  void addLec() {
+  void addLec() async {
     if (add_mode == 'add') {
       if (lec_name.text.trim().length < 1) {
         notify(
@@ -345,19 +603,52 @@ class glob with ChangeNotifier {
         notify(app_language == 'arabic' ? 'الكود غير صالح' : 'invalid code!',
             'error');
       } else {
-        notify(app_language == 'arabic' ? 'تم إضافة المحاضرة' : 'success!',
-            'success');
-        lectures.add({
-          'name': lec_name.text,
-          'startTime': formatNumber(startTime.hour) +
-              ':' +
-              formatNumber(startTime.minute),
-          'endingTime':
-              formatNumber(endTime.hour) + ':' + formatNumber(endTime.minute),
-          'code': code_controller.text,
-          'day': inputDay
-        });
-        goToSchedule();
+        if (settings['cloud-storage']) {
+          is_fetching = true;
+          try {
+            var response = await Dio().get(
+                'https://noboike.com/apis/schedule/post/index.php?username=${username}&password=${password}&name=${lec_name.text}&startTime=${formatNumber(startTime.hour) + ':' + formatNumber(startTime.minute)}&endingTime=${formatNumber(endTime.hour) + ':' + formatNumber(endTime.minute)}&code=${code_controller.text}&day=${inputDay}');
+            dynamic fdata = response.data;
+
+            if (fdata['status'] == 'true') {
+              lectures = fdata['lectures'];
+              save();
+              loadSchedule();
+              goToSchedule();
+              notify(
+                  app_language == 'arabic' ? 'تم إضافة المحاضرة' : 'success!',
+                  'success');
+              is_fetching = false;
+            } else {
+              notify(
+                  app_language == 'arabic'
+                      ? 'حدث خطأ ما'
+                      : 'something went wrong',
+                  'error');
+            }
+          } catch (e) {
+            notify(
+                app_language == 'arabic'
+                    ? 'فشل الإتصال'
+                    : 'something went wrong',
+                'error');
+          }
+          is_fetching = false;
+        } else {
+          notify(app_language == 'arabic' ? 'تم إضافة المحاضرة' : 'success!',
+              'success');
+          lectures.add({
+            'name': lec_name.text,
+            'startTime': formatNumber(startTime.hour) +
+                ':' +
+                formatNumber(startTime.minute),
+            'endingTime':
+                formatNumber(endTime.hour) + ':' + formatNumber(endTime.minute),
+            'code': code_controller.text,
+            'day': inputDay
+          });
+          goToSchedule();
+        }
       }
     } else {
       if (lec_name.text.trim().length < 1) {
@@ -372,22 +663,56 @@ class glob with ChangeNotifier {
         notify(app_language == 'arabic' ? 'الكود غير صالح' : 'invalid code!',
             'error');
       } else {
-        lectures[selectedLec]['name'] = lec_name.text;
-        lectures[selectedLec]['day'] = inputDay;
-        lectures[selectedLec]['startTime'] =
-            formatNumber(startTime.hour) + ':' + formatNumber(startTime.minute);
-        lectures[selectedLec]['endingTime'] =
-            formatNumber(endTime.hour) + ':' + formatNumber(endTime.minute);
-        lectures[selectedLec]['code'] = code_controller.text;
-        notify(app_language == 'arabic' ? 'تم تعديل المحاضرة' : 'success!',
-            'success');
+        if (settings['cloud-storage']) {
+          is_fetching = true;
+          try {
+            var response = await Dio().get(
+                'https://noboike.com/apis/schedule/update/index.php?username=${username}&password=${password}&name=${lec_name.text}&startTime=${formatNumber(startTime.hour) + ':' + formatNumber(startTime.minute)}&endingTime=${formatNumber(endTime.hour) + ':' + formatNumber(endTime.minute)}&code=${code_controller.text}&day=${inputDay}&id=${lectures[selectedLec]['id']}');
+            dynamic fdata = response.data;
 
-        goToSchedule();
-        startTime = TimeOfDay(hour: 8, minute: 0);
-        endTime = TimeOfDay(hour: 9, minute: 4);
-        inputLecName = '';
-        inputCode = '';
-        inputDay = 7;
+            if (fdata['status'] == 'true') {
+              lectures = fdata['lectures'];
+              save();
+              loadSchedule();
+              goToSchedule();
+              notify(
+                  app_language == 'arabic' ? 'تم تعديل المحاضرة' : 'success!',
+                  'success');
+            } else {
+              notify(
+                  app_language == 'arabic'
+                      ? 'حدث خطأ ما'
+                      : 'something went wrong',
+                  'error');
+            }
+          } catch (e) {
+            notify(
+                app_language == 'arabic'
+                    ? 'فشل الإتصال'
+                    : 'something went wrong',
+                'error');
+          }
+
+          is_fetching = false;
+        } else {
+          lectures[selectedLec]['name'] = lec_name.text;
+          lectures[selectedLec]['day'] = inputDay;
+          lectures[selectedLec]['startTime'] = formatNumber(startTime.hour) +
+              ':' +
+              formatNumber(startTime.minute);
+          lectures[selectedLec]['endingTime'] =
+              formatNumber(endTime.hour) + ':' + formatNumber(endTime.minute);
+          lectures[selectedLec]['code'] = code_controller.text;
+          notify(app_language == 'arabic' ? 'تم تعديل المحاضرة' : 'success!',
+              'success');
+
+          goToSchedule();
+          startTime = TimeOfDay(hour: 8, minute: 0);
+          endTime = TimeOfDay(hour: 9, minute: 4);
+          inputLecName = '';
+          inputCode = '';
+          inputDay = 7;
+        }
       }
     }
     save();
@@ -585,6 +910,7 @@ class glob with ChangeNotifier {
               h24Toh12(lectures[i]['endingTime']),
           text3: translateCode(lectures[i]['code'].toString()),
           index: i,
+          id: lectures[i]['id'].toString(),
         ));
       } else if (lectures[i]['day'].toString() == '1') {
         day1_hidden = true;
@@ -595,6 +921,7 @@ class glob with ChangeNotifier {
               h24Toh12(lectures[i]['endingTime']),
           text3: translateCode(lectures[i]['code'].toString()),
           index: i,
+          id: lectures[i]['id'].toString(),
         ));
       } else if (lectures[i]['day'].toString() == '2') {
         day2_hidden = true;
@@ -605,6 +932,7 @@ class glob with ChangeNotifier {
               h24Toh12(lectures[i]['endingTime']),
           text3: translateCode(lectures[i]['code'].toString()),
           index: i,
+          id: lectures[i]['id'].toString(),
         ));
       } else if (lectures[i]['day'].toString() == '3') {
         day3_hidden = true;
@@ -615,6 +943,7 @@ class glob with ChangeNotifier {
               h24Toh12(lectures[i]['endingTime']),
           text3: translateCode(lectures[i]['code'].toString()),
           index: i,
+          id: lectures[i]['id'].toString(),
         ));
       }
       if (lectures[i]['day'].toString() == '4') {
@@ -626,6 +955,7 @@ class glob with ChangeNotifier {
               h24Toh12(lectures[i]['endingTime']),
           text3: translateCode(lectures[i]['code'].toString()),
           index: i,
+          id: lectures[i]['id'].toString(),
         ));
       }
       if (lectures[i]['day'].toString() == '5') {
@@ -637,6 +967,7 @@ class glob with ChangeNotifier {
               h24Toh12(lectures[i]['endingTime']),
           text3: translateCode(lectures[i]['code'].toString()),
           index: i,
+          id: lectures[i]['id'].toString(),
         ));
       }
       if (lectures[i]['day'].toString() == '6') {
@@ -648,17 +979,19 @@ class glob with ChangeNotifier {
               h24Toh12(lectures[i]['endingTime']),
           text3: translateCode(lectures[i]['code'].toString()),
           index: i,
+          id: lectures[i]['id'].toString(),
         ));
       }
     }
   }
 
   void toggoleDarkMode() {
-    animated_filter['ignored'] = false;if (!darkMode) {
-            nextThemeColor = Color.fromRGBO(21, 21, 25, 1);
-          } else {
-            nextThemeColor = Colors.white;
-          }
+    animated_filter['ignored'] = false;
+    if (!darkMode) {
+      nextThemeColor = Color.fromRGBO(21, 21, 25, 1);
+    } else {
+      nextThemeColor = Colors.white;
+    }
 
     if (darkMode) {
       themeModeImageSrc = 'assets/sun.png';
@@ -813,6 +1146,27 @@ class glob with ChangeNotifier {
     notifyListeners();
   }
 
+  void goToLogin() {
+    login_page_open = true;
+    username_inp.clear();
+    password_inp.clear();
+  }
+
+  void closeLogin() {
+    login_page_open = false;
+  }
+
+  void goToSignup() {
+    signup_page_open = true;
+    username_inp.clear();
+    password_inp.clear();
+    rpassword_inp.clear();
+  }
+
+  void closeSignup() {
+    signup_page_open = false;
+  }
+
   void goToSettings() {
     renderCheckbox();
     settings_page_open = true;
@@ -833,6 +1187,9 @@ class glob with ChangeNotifier {
   }
 
   void closeSettings() {
+    if (should_load) {
+      load();
+    }
     settings_page_open = false;
     loadSchedule();
     settings_page_anm = [
@@ -851,10 +1208,36 @@ class glob with ChangeNotifier {
     ];
   }
 
-  void deleteLecture(int index) {
-    lectures.removeAt(index);
-    save();
-    loadSchedule();
+  void deleteLecture(int index, String id) async {
+    if (!settings['cloud-storage']) {
+      lectures.removeAt(index);
+      save();
+      loadSchedule();
+    } else {
+      is_fetching = true;
+      try {
+        var response = await Dio().get(
+            'https://noboike.com/apis/schedule/del/index.php?username=${username}&password=${password}&id=${id}');
+        dynamic fdata = response.data;
+        if (fdata['status'] == 'true') {
+          lectures = fdata['lectures'];
+          save();
+          loadSchedule();
+          notify(
+              app_language == 'arabic' ? 'تم حذف المحاضرة' : 'lecture deleted',
+              'success');
+        } else {
+          notify(
+              app_language == 'arabic' ? 'حدث خطأ ما' : 'something went wrong',
+              'error');
+        }
+      } catch (e) {
+        notify(
+            app_language == 'arabic' ? 'فشل الإتصال' : 'something went wrong',
+            'error');
+      }
+      is_fetching = false;
+    }
   }
 
   void globPlayAnimations() {
@@ -864,6 +1247,7 @@ class glob with ChangeNotifier {
     playAnimation(filter2_anm, true);
     playAnimation(live_ball_anm, true);
     playAnimation(settings_page_anm, true);
+    playAnimation(animated_fetch['anm'], true);
     for (var i = 0; i < animated_checkbox.length; i++) {
       playAnimation(animated_checkbox[i]['anm'], true);
     }

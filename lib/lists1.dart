@@ -501,11 +501,12 @@ class list2 extends StatelessWidget {
       {super.key,
       required this.text1,
       required this.text2,
-      required this.text3, required this.index});
+      required this.text3, required this.index, required this.id});
   final String text1;
   final String text2;
   final String text3;
   final int index;
+  final String id;
 
   @override
   Widget build(BuildContext context) {
@@ -525,7 +526,7 @@ class list2 extends StatelessWidget {
                 alignment: context.watch<glob>().app_language == 'arabic' ? Alignment.topLeft : Alignment.topRight,
                 child: GestureDetector(
                   onTap: () {
-                    context.read<glob>().deleteLecture(index);
+                    context.read<glob>().deleteLecture(index, id);
                   },
                   child: Container(
                     width: 50 * ratio,

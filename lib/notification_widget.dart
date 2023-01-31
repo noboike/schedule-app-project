@@ -72,12 +72,15 @@ class notifyBox extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Positioned(
-              top: 5 * ratio,
-              right: 5 * ratio,
+            Align(
+              alignment: context.watch<glob>().app_language == 'arabic' ? Alignment.centerRight : Alignment.centerLeft,
               child: Container(
                 width: 28 * ratio,
                 height: 28 * ratio,
+                margin: EdgeInsets.only(
+                  right: context.watch<glob>().app_language == 'arabic' ? 5 * ratio : 0,
+                  left: context.watch<glob>().app_language != 'arabic' ? 5 * ratio : 0,
+                ),
                 decoration: BoxDecoration(
                     color: color2,
                     borderRadius: BorderRadius.circular(28 * ratio)),
@@ -98,18 +101,22 @@ class notifyBox extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
-              right: 41 * ratio,
-              top: 5 * ratio,
+            Align(
+              alignment: context.watch<glob>().app_language == 'arabic' ? Alignment.centerRight : Alignment.centerLeft,
               child: Container(
                 width: 142 * ratio,
                 height: 28 * ratio,
+                margin: EdgeInsets.only(
+                  right: context.watch<glob>().app_language == 'arabic' ? 41 * ratio : 0,
+                  left: context.watch<glob>().app_language != 'arabic' ? 41 * ratio : 0,
+                ),
                 child: Center(
                     child: Opacity(
                   opacity: context.watch<glob>().box['opacity'],
                   child: Text(
                     text,
                     style: TextStyle(color: Colors.white, fontSize: 14 * ratio, fontFamily: context.watch<glob>().app_language),
+                    textAlign: TextAlign.center,
                   ),
                 )),
               ),

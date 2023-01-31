@@ -137,6 +137,7 @@ class settings_page extends StatelessWidget {
                 id: '24 Hours mode',
                 index: 0,
               ),
+              
               switch_list(
                 text: context.watch<glob>().app_language == 'arabic'
                     ? 'قرائة كود مكان المحاضرة'
@@ -144,6 +145,31 @@ class settings_page extends StatelessWidget {
                 id: 'transtale Code',
                 index: 1,
               ),
+              switch_list(
+                text: context.watch<glob>().app_language == 'arabic'
+                    ? 'مؤثرات صوتية'
+                    : 'Sounds',
+                id: 'sounds',
+                index: 3,
+              ),
+              IgnorePointer(
+                ignoring: !(context.watch<glob>().username.trim().length >= 1) && !(context.watch<glob>().password.trim().length >= 1),
+                child: Opacity(
+                  opacity: !(context.watch<glob>().username.trim().length >= 1) && !(context.watch<glob>().password.trim().length >= 1) ? 0.5 : 1,
+                  child: switch_list(
+                    text: context.watch<glob>().app_language == 'arabic'
+                        ? 'تخزين سحابي'
+                        : 'cloud storage',
+                    id: 'cloud-storage',
+                    index: 2,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 29 * ratio,
+              ),
+              login_btn(),
+              logout_btn(),
               SizedBox(
                 height: 29 * ratio,
               ),
@@ -172,7 +198,8 @@ class settings_page extends StatelessWidget {
                     ),
                   ),
                 ),
-              )
+              ),
+              SizedBox(height: 41 * ratio,),
             ],
           )
         ],
@@ -297,6 +324,126 @@ class switch_list extends StatelessWidget {
               ),
             )
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class login_btn extends StatelessWidget {
+  const login_btn({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      visible: !(context.watch<glob>().username.trim().length >= 1) && !(context.watch<glob>().password.trim().length >= 1),
+      child: GestureDetector(
+        onTap: () {
+          context.read<glob>().goToLogin();
+        },
+        child: Container(
+          width: MediaQuery.of(context).size.width - (80 * ratio),
+          height: 66 * ratio,
+          margin: EdgeInsets.only(left: 40 * ratio, right: 40 * ratio),
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(51, 51, 51, 1),
+            borderRadius: BorderRadius.circular(10 * ratio)
+          ),
+          child: Center(
+            child: Text(
+              context.watch<glob>().app_language == 'arabic' ? 'تسجيل دخول' : 'Log in',
+              style: TextStyle(
+                fontFamily: context.watch<glob>().app_language,
+                fontSize: 24.05 * ratio,
+                color: Colors.white
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class logout_btn extends StatelessWidget {
+  const logout_btn({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      visible: (context.watch<glob>().username.trim().length >= 1) && (context.watch<glob>().password.trim().length >= 1),
+      child: GestureDetector(
+        onTap: () {
+          
+        },
+        child: Container(
+          width: MediaQuery.of(context).size.width - (80 * ratio),
+          height: 66 * ratio,
+          margin: EdgeInsets.only(left: 40 * ratio, right: 40 * ratio),
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(51, 51, 51, 1),
+            borderRadius: BorderRadius.circular(10 * ratio)
+          ),
+          child: Stack(
+            children: [
+              //user-img
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 50 * ratio,
+                  height: 50 * ratio,
+                  margin: EdgeInsets.only(left: 20 * ratio),
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(38, 38, 38, 1),
+                    borderRadius: BorderRadius.circular(50 * ratio)
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 24.29 * ratio,
+                      height: 24.29 * ratio,
+                      child: FittedBox(
+                        child: Image.asset('assets/user.png'),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              //username
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  margin: EdgeInsets.only(left: (20 + 50 + 15) * ratio),
+                  child: Text(context.watch<glob>().username, style: TextStyle(color: Colors.white, fontSize: 24.05 * ratio, fontFamily: 'english'),),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    context.read<glob>().logout();
+                  },
+                  child: Container(
+                    width: 50 * ratio,
+                    height: 50 * ratio,
+                    margin: EdgeInsets.only(right: 20 * ratio),
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(38, 38, 38, 1),
+                      borderRadius: BorderRadius.circular(10 * ratio)
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 24.29 * ratio,
+                        height: 24.29 * ratio,
+                        child: FittedBox(
+                          child: Image.asset('assets/logout.png'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            ],
+          )
         ),
       ),
     );

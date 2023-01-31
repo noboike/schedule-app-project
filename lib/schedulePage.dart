@@ -164,6 +164,7 @@ class schedulePage extends StatelessWidget {
             ],
           ),
         ),
+        refresh_btn(),
         //day 7
         //big text
         Container(
@@ -486,6 +487,43 @@ class schedulePage extends StatelessWidget {
           height: 100 * ratio,
         )
       ],
+    );
+  }
+}
+class refresh_btn extends StatelessWidget {
+  const refresh_btn({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: !context.watch<glob>().settings['cloud-storage'],
+      child: GestureDetector(
+        onTap: () {
+          context.read<glob>().load();
+        },
+        child: Opacity(
+          opacity: context.watch<glob>().settings['cloud-storage'] ? 1 : 0.5,
+          child: Container(
+            margin: EdgeInsets.only(top: 30  * ratio),
+            width: MediaQuery.of(context).size.width - (80 * ratio),
+            height: 66 * ratio,
+            decoration: BoxDecoration(
+              color: pColor2,
+              borderRadius: BorderRadius.circular(10 * ratio),
+            ),
+            child: Center(
+              child: Text(
+                context.watch<glob>().app_language == 'arabic' ? 'تحديث الجدول' : 'Update schedule',
+                style: TextStyle(
+                  fontFamily: context.watch<glob>().app_language,
+                  fontSize: 20 * ratio,
+                  color: pTextColor1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

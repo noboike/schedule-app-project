@@ -42,6 +42,10 @@ dependencies:
   collection: ^1.16.0
   shared_preferences: ^2.0.16
   flutter_launcher_icons: ^0.11.0
+  dio: ^4.0.6
+  http: ^0.13.5
+  audioplayers: ^3.0.1
+  url_launcher: ^6.1.8
 
 dev_dependencies:
   flutter_test:
