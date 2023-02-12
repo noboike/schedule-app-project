@@ -274,15 +274,15 @@ class signupPage extends StatelessWidget {
                       SizedBox(
                         height: 25 * ratio,
                       ),
-                      //re-password text
+                      //confirm-password text
                       Container(
                         width: MediaQuery.of(context).size.width - (80 * ratio),
                         margin: EdgeInsets.only(
                             left: 40 * ratio, right: 40 * ratio),
                         child: Text(
                           context.watch<glob>().app_language == 'arabic'
-                              ? 'إعادة كتابة كلمة المرور'
-                              : 're-password',
+                              ? 'تأكيد كلمة المرور'
+                              : 'confirm password',
                           textAlign:
                               context.watch<glob>().app_language == 'arabic'
                                   ? TextAlign.right
